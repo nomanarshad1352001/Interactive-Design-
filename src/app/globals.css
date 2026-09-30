@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  /* Coastal palette */
+  --color-sand-50: #faf7f0;
+  --color-sand-100: #f4eee0;
+  --color-sand-200: #e9dec6;
+  --color-sand-300: #dbcaa5;
+  --color-ink-500: #3d5a66;
+  --color-ink-600: #2c4750;
+  --color-ink-700: #17424f;
+  --color-ink-800: #10333f;
+  --color-ink-900: #0b2732;
+  --color-ink-950: #071c24;
+  --color-teal-100: #d7efef;
+  --color-teal-200: #b3e1e1;
+  --color-teal-300: #7fc8ca;
+  --color-teal-400: #3fa3a8;
+  --color-teal-500: #0e7d86;
+  --color-teal-600: #0b6a72;
+  --color-teal-700: #09565d;
+  --color-coral-300: #ffb49c;
+  --color-coral-400: #ff8a67;
+  --color-coral-500: #ff6b4a;
+  --color-coral-600: #ef5535;
+
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --shadow-lift: 0 24px 60px -24px rgba(11, 39, 50, 0.35);
+  --shadow-card: 0 10px 40px -18px rgba(11, 39, 50, 0.28);
+
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--color-coral-500);
+  color: #fff;
+}
+
+/* subtle film grain for hero surfaces */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* number inputs: keep clean steppers */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* thin scrollbars inside panels */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(11, 39, 50, 0.25) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(11, 39, 50, 0.18);
+  border-radius: 999px;
+}
+
+/* dashed print-area label chip */
+.area-chip {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+/* custom range-style color well */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(11, 39, 50, 0.2);
+}
+input[type="color"]::-moz-color-swatch {
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(11, 39, 50, 0.2);
+}
