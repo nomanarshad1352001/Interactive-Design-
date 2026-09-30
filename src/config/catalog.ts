@@ -2,9 +2,18 @@
  * Coastal Custom Tees — product catalog (dummy data, no database).
  *
  * All coordinates are expressed in a fixed 1024×1024 virtual space that the
- * designer canvas maps onto the responsive mockup stage. Print-area rects were
- * calibrated against the generated garment photography in /public/mockups.
+ * designer canvas maps onto the responsive mockup stage. The real white garment
+ * photography is physically bundled from src/assets/mockups by Next.js.
  */
+
+import tshirtFront from "@/assets/mockups/tshirt-front.jpg";
+import tshirtBack from "@/assets/mockups/tshirt-back.jpg";
+import hoodieFront from "@/assets/mockups/hoodie-front.jpg";
+import hoodieBack from "@/assets/mockups/hoodie-back.jpg";
+import capFront from "@/assets/mockups/cap-front.jpg";
+import capBack from "@/assets/mockups/cap-back.jpg";
+import toteFront from "@/assets/mockups/tote-front.jpg";
+import toteBack from "@/assets/mockups/tote-back.jpg";
 
 export type ProductId = "tshirt" | "hoodie" | "cap" | "tote";
 export type ViewSide = "front" | "back";
@@ -54,22 +63,15 @@ export interface ProductDef {
 export const DESIGN_SPACE = 1024;
 
 /**
- * Front-facing Pexels product/lifestyle photographs.
- * They are fetched through our same-origin image proxy so canvas exports remain
- * untainted on Vercel. There are no local binary garment files to deploy.
+ * Real white garment photography — front AND back, no people.
+ * Static imports make these files part of the compiled application bundle; the
+ * downloaded source and every Vercel deployment therefore contain the images.
  */
-/**
- * Real garment photography — front AND back for every product, no models.
- * Small optimized JPEGs so they always commit and serve; if a host ever misses
- * them the imaging layer substitutes a rendered placeholder instead of a blank.
- */
-const photo = (file: string): string => `/mockups/${file}`;
-
 const STOCK_PRODUCTS = {
-  tshirt: { front: photo("tshirt-front.jpg"), back: photo("tshirt-back.jpg") },
-  hoodie: { front: photo("hoodie-front.jpg"), back: photo("hoodie-back.jpg") },
-  cap: { front: photo("cap-front.jpg"), back: photo("cap-back.jpg") },
-  tote: { front: photo("tote-front.jpg"), back: photo("tote-back.jpg") },
+  tshirt: { front: tshirtFront.src, back: tshirtBack.src },
+  hoodie: { front: hoodieFront.src, back: hoodieBack.src },
+  cap: { front: capFront.src, back: capBack.src },
+  tote: { front: toteFront.src, back: toteBack.src },
 } as const;
 
 export const PRODUCTS: ProductDef[] = [
