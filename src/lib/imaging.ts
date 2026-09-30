@@ -11,6 +11,8 @@
  */
 
 import { DESIGN_SPACE, type KnockoutRect } from "@/config/catalog";
+import { resolveAssetUrl } from "./asset";
+import { fallbackMockup } from "./placeholder";
 import type { DesignElement } from "./studio-types";
 
 export interface ProcessedMockup {
@@ -26,15 +28,31 @@ export function loadHtmlImage(src: string, crossOrigin = true): Promise<HTMLImag
   const key = `${crossOrigin ? "cors" : "plain"}:${src}`;
   const hit = imgCache.get(key);
   if (hit) return hit;
+  const url = /^https?:\/\//.test(src) || src.startsWith("data:") ? src : resolveAssetUrl(src);
   const p = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     if (crossOrigin && !src.startsWith("data:")) img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Could not load image: ${src.slice(0, 80)}`));
-    img.src = src;
+    img.src = url;
   });
   imgCache.set(key, p);
-  return p;
+  return p.catch(async (err) => {
+    // One retry on plain (non-CORS) before giving up — transient hosts fail often.
+    if (!/^https?:\/\//.test(src) && !src.startsWith("data:")) {
+      try {
+        return await new Promise<HTMLImageElement>((res2, rej2) => {
+          const img = new Image();
+          img.onload = () => res2(img);
+          img.onerror = rej2;
+          img.src = src;
+        });
+      } catch {
+        /* fall through */
+      }
+    }
+    throw err;
+  });
 }
 
 /** Remove the white studio backdrop via a border-seeded flood fill. */
@@ -162,7 +180,14 @@ export function processMockup(src: string, knockouts?: KnockoutRect[]): Promise<
   const hit = mockupCache.get(key);
   if (hit) return hit;
   const p = (async (): Promise<ProcessedMockup> => {
-    const img = await loadHtmlImage(src);
+    // Load with real canvas safety; if the source fails (e.g. asset not deployed),
+    // fall back to a rendered placeholder so the product area is never blank.
+    let img: HTMLImageElement;
+    try {
+      img = await loadHtmlImage(src);
+    } catch {
+      img = await loadHtmlImage(fallbackMockup().url, false);
+    }
     const S = DESIGN_SPACE;
     const canvas = document.createElement("canvas");
     canvas.width = S;

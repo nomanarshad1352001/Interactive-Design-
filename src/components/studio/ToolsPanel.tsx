@@ -124,7 +124,7 @@ export default function ToolsPanel({
   const activePlacement = placements.find((p) => p.id === activePlacementId);
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       {/* 1 ── CHOOSE PRODUCT */}
       <Section
         id="product"

@@ -184,7 +184,7 @@ export default function QuotePanel({
   };
 
   return (
-    <div className="space-y-2.5" id="quote">
+    <div className="space-y-2" id="quote">
       {/* 1 ── SIZES & QUANTITIES */}
       <section className="rounded-2xl border border-ink-900/10 bg-white p-3 shadow-sm">
         <header className="mb-3 flex items-center gap-2.5">

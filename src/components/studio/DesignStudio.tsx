@@ -730,7 +730,7 @@ export default function DesignStudio() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+      <div className="grid items-start gap-4 xl:grid-cols-[264px_minmax(0,1fr)_316px]">
         {/* ══ LEFT: product → print location → color → artwork → text ══ */}
         <aside className="order-2 xl:order-1 xl:sticky xl:top-28 xl:max-h-[calc(100vh-8.5rem)] xl:overflow-y-auto xl:thin-scroll xl:pr-1">
           <ToolsPanel {...toolsProps} />
@@ -797,8 +797,8 @@ export default function DesignStudio() {
             </div>
           </div>
 
-          {/* the product itself */}
-          <div className="mt-2.5">
+          {/* the product itself — medium card so the layout reads on one page */}
+          <div className="mx-auto mt-2 max-w-[520px] xl:max-w-[560px]">
             <MockupStage
               product={product}
               view={view}
