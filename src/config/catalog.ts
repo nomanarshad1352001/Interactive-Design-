@@ -53,6 +53,25 @@ export interface ProductDef {
 
 export const DESIGN_SPACE = 1024;
 
+/**
+ * Front-facing Pexels product/lifestyle photographs.
+ * They are fetched through our same-origin image proxy so canvas exports remain
+ * untainted on Vercel. There are no local binary garment files to deploy.
+ */
+/**
+ * Real garment photography — front AND back for every product, no models.
+ * Small optimized JPEGs so they always commit and serve; if a host ever misses
+ * them the imaging layer substitutes a rendered placeholder instead of a blank.
+ */
+const photo = (file: string): string => `/mockups/${file}`;
+
+const STOCK_PRODUCTS = {
+  tshirt: { front: photo("tshirt-front.jpg"), back: photo("tshirt-back.jpg") },
+  hoodie: { front: photo("hoodie-front.jpg"), back: photo("hoodie-back.jpg") },
+  cap: { front: photo("cap-front.jpg"), back: photo("cap-back.jpg") },
+  tote: { front: photo("tote-front.jpg"), back: photo("tote-back.jpg") },
+} as const;
+
 export const PRODUCTS: ProductDef[] = [
   {
     id: "tshirt",
@@ -62,7 +81,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 14,
     apparel: true,
     sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
-    images: { front: "/mockups/tshirt-front.jpg", back: "/mockups/tshirt-back.jpg" },
+    images: { front: STOCK_PRODUCTS.tshirt.front, back: STOCK_PRODUCTS.tshirt.back },
     print: {
       front: { x: 340, y: 300, w: 344, h: 430 },
       back: { x: 340, y: 308, w: 344, h: 430 },
@@ -91,7 +110,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 30,
     apparel: true,
     sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
-    images: { front: "/mockups/hoodie-front.png", back: "/mockups/hoodie-back.png" },
+    images: { front: STOCK_PRODUCTS.hoodie.front, back: STOCK_PRODUCTS.hoodie.back },
     print: {
       front: { x: 325, y: 350, w: 374, h: 296 },
       back: { x: 335, y: 245, w: 354, h: 472 },
@@ -120,7 +139,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 18,
     apparel: false,
     sizes: ["One Size"],
-    images: { front: "/mockups/cap-front.png", back: "/mockups/cap-back.png" },
+    images: { front: STOCK_PRODUCTS.cap.front, back: STOCK_PRODUCTS.cap.back },
     print: {
       front: { x: 300, y: 225, w: 424, h: 330 },
       back: { x: 320, y: 250, w: 384, h: 300 },
@@ -146,7 +165,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 12,
     apparel: false,
     sizes: ["One Size"],
-    images: { front: "/mockups/tote-front.jpg", back: "/mockups/tote-back.jpg" },
+    images: { front: STOCK_PRODUCTS.tote.front, back: STOCK_PRODUCTS.tote.back },
     print: {
       front: { x: 262, y: 448, w: 500, h: 470 },
       back: { x: 262, y: 448, w: 500, h: 470 },

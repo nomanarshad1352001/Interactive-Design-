@@ -11,8 +11,6 @@
  */
 
 import { DESIGN_SPACE, type KnockoutRect } from "@/config/catalog";
-import { resolveAssetUrl } from "./asset";
-import { fallbackMockup } from "./placeholder";
 import type { DesignElement } from "./studio-types";
 
 export interface ProcessedMockup {
@@ -28,31 +26,35 @@ export function loadHtmlImage(src: string, crossOrigin = true): Promise<HTMLImag
   const key = `${crossOrigin ? "cors" : "plain"}:${src}`;
   const hit = imgCache.get(key);
   if (hit) return hit;
-  const url = /^https?:\/\//.test(src) || src.startsWith("data:") ? src : resolveAssetUrl(src);
   const p = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     if (crossOrigin && !src.startsWith("data:")) img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Could not load image: ${src.slice(0, 80)}`));
-    img.src = url;
-  });
-  imgCache.set(key, p);
-  return p.catch(async (err) => {
-    // One retry on plain (non-CORS) before giving up — transient hosts fail often.
-    if (!/^https?:\/\//.test(src) && !src.startsWith("data:")) {
+    img.src = src;
+  }).catch(async (error) => {
+    // The normal path is same-origin /api/img. If a serverless proxy is blocked,
+    // retry the original Pexels URL directly in browsers that allow its CORS.
+    if (src.startsWith("/api/img?")) {
       try {
-        return await new Promise<HTMLImageElement>((res2, rej2) => {
-          const img = new Image();
-          img.onload = () => res2(img);
-          img.onerror = rej2;
-          img.src = src;
-        });
+        const u = new URLSearchParams(src.split("?")[1]).get("u");
+        if (u) {
+          return await new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = u;
+          });
+        }
       } catch {
-        /* fall through */
+        /* fall through to the original error */
       }
     }
-    throw err;
+    throw error;
   });
+  imgCache.set(key, p);
+  return p;
 }
 
 /** Remove the white studio backdrop via a border-seeded flood fill. */
@@ -180,13 +182,27 @@ export function processMockup(src: string, knockouts?: KnockoutRect[]): Promise<
   const hit = mockupCache.get(key);
   if (hit) return hit;
   const p = (async (): Promise<ProcessedMockup> => {
-    // Load with real canvas safety; if the source fails (e.g. asset not deployed),
-    // fall back to a rendered placeholder so the product area is never blank.
+    // The garment render is a data-URI (always resolvable), so a load failure is
+    // remote; return a neutral panel rather than a blank product area.
     let img: HTMLImageElement;
     try {
       img = await loadHtmlImage(src);
     } catch {
-      img = await loadHtmlImage(fallbackMockup().url, false);
+      const c = document.createElement("canvas");
+      c.width = DESIGN_SPACE;
+      c.height = DESIGN_SPACE;
+      const g = c.getContext("2d")!;
+      g.fillStyle = "#ffffff";
+      g.fillRect(0, 0, DESIGN_SPACE, DESIGN_SPACE);
+      g.strokeStyle = "rgba(11,39,50,0.22)";
+      g.lineWidth = 4;
+      g.setLineDash([14, 12]);
+      g.strokeRect(DESIGN_SPACE * 0.3, DESIGN_SPACE * 0.3, DESIGN_SPACE * 0.4, DESIGN_SPACE * 0.44);
+      g.fillStyle = "rgba(11,39,50,0.4)";
+      g.textAlign = "center";
+      g.font = `600 ${DESIGN_SPACE * 0.034}px sans-serif`;
+      g.fillText("Product preview", DESIGN_SPACE / 2, DESIGN_SPACE * 0.5);
+      img = await loadHtmlImage(c.toDataURL("image/png"), false);
     }
     const S = DESIGN_SPACE;
     const canvas = document.createElement("canvas");

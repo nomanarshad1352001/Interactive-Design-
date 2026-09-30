@@ -89,21 +89,18 @@ function GarmentFace({
 }: GarmentFaceProps) {
   return (
     <div className="absolute inset-0">
-      {/* Real garment photography — never dimmed. */}
+      {/* Garment — code-rendered silhouette so it always displays on every host. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={mock.url}
         alt={`${product.name} ${side} live mockup`}
         draggable={false}
         className="pointer-events-none absolute inset-0 h-full w-full"
-        style={{
-          filter: shadow
-            ? "drop-shadow(0 34px 25px rgba(11,39,50,0.24)) contrast(1.02)"
-            : "contrast(1.02)",
-        }}
+        style={{ filter: shadow ? "drop-shadow(0 34px 25px rgba(11,39,50,0.24))" : "none" }}
       />
 
-      {/* Color only affects the garment silhouette; photo texture stays intact. */}
+      {/* Isolated mockups can be recolored. Stock lifestyle photos stay faithful
+          to their original colors so the model/background are never tinted. */}
       {colorHex.toLowerCase() !== "#ffffff" && (
         <div
           aria-hidden

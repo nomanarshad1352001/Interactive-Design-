@@ -653,6 +653,7 @@ export default function DesignStudio() {
     product,
     onProductChange: (id: ProductId) => {
       setProductId(id);
+      setView("front");
       setSelectedId(null);
     },
     placements: product.placements[view],

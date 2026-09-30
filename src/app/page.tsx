@@ -13,7 +13,7 @@ const STEPS = [
   {
     icon: MousePointerClick,
     title: "Make it yours",
-    text: "Upload logos or photos, add text in 14 fonts, drag, resize and rotate — then spin the live garment in the 3D showroom.",
+    text: "Upload logos or photos, add text in 14 fonts, drag, resize and rotate on the front and back views."
   },
   {
     icon: PackageSearch,
