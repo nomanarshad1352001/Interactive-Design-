@@ -62,7 +62,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 14,
     apparel: true,
     sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
-    images: { front: "/mockups/tshirt-front.png", back: "/mockups/tshirt-back.png" },
+    images: { front: "/mockups/tshirt-front.jpg", back: "/mockups/tshirt-back.jpg" },
     print: {
       front: { x: 340, y: 300, w: 344, h: 430 },
       back: { x: 340, y: 308, w: 344, h: 430 },
@@ -146,7 +146,7 @@ export const PRODUCTS: ProductDef[] = [
     basePrice: 12,
     apparel: false,
     sizes: ["One Size"],
-    images: { front: "/mockups/tote-front.png", back: "/mockups/tote-back.png" },
+    images: { front: "/mockups/tote-front.jpg", back: "/mockups/tote-back.jpg" },
     print: {
       front: { x: 262, y: 448, w: 500, h: 470 },
       back: { x: 262, y: 448, w: 500, h: 470 },
