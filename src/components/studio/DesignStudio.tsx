@@ -44,6 +44,7 @@ import type {
 import { emptyDesigns, emptySizes, uid } from "@/lib/studio-types";
 import MockupStage, { type ViewerMode } from "./MockupStage";
 import ToolsPanel, { type TextInit } from "./ToolsPanel";
+import LayersPanel from "./LayersPanel";
 import QuotePanel from "./QuotePanel";
 
 const MAX_ARTWORK_EDGE = 1600;
@@ -654,6 +655,9 @@ export default function DesignStudio() {
       setProductId(id);
       setSelectedId(null);
     },
+    placements: product.placements[view],
+    activePlacementId: activePlacement.id,
+    onPlacementChange: selectPlacement,
     colorHex: color.hex,
     colorName: color.name,
     onColorChange: (hex: string, name: string) =>
@@ -664,6 +668,12 @@ export default function DesignStudio() {
     onAddArtwork: addArtworkToView,
     onAddSample: handleAddSample,
     onAddText: handleAddText,
+    elements,
+    selected,
+    onUpdateSelected: updateSelected,
+  };
+
+  const layersProps = {
     elements,
     view,
     selectedId,
@@ -679,9 +689,6 @@ export default function DesignStudio() {
     onCenterSelected: centerSelected,
     onFitSelected: fitSelected,
     onRemoveWhiteBackground: removeWhiteBackground,
-    placements: product.placements[view],
-    activePlacementId: activePlacement.id,
-    onPlacementChange: selectPlacement,
     blend,
     onBlendChange: setBlend,
     onClearView: clearView,
@@ -723,120 +730,100 @@ export default function DesignStudio() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
-        {/* Desktop rail: a self-scrolling column so the whole studio fits the page. */}
-        <aside className="hidden xl:sticky xl:top-28 xl:block xl:max-h-[calc(100vh-8.5rem)] xl:overflow-y-auto xl:thin-scroll xl:pr-1">
+      <div className="grid items-start gap-4 xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+        {/* ══ LEFT: product → print location → color → artwork → text ══ */}
+        <aside className="order-2 xl:order-1 xl:sticky xl:top-28 xl:max-h-[calc(100vh-8.5rem)] xl:overflow-y-auto xl:thin-scroll xl:pr-1">
           <ToolsPanel {...toolsProps} />
         </aside>
 
-        {/* live 2D / 3D stage stays pinned in view */}
-        <div className="self-start xl:sticky xl:top-28">
-          <div className="mb-3 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex rounded-full border border-ink-900/10 bg-white p-1 shadow-sm">
-                {(["2d", "3d"] as ViewerMode[]).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => {
-                      setViewerMode(m);
-                      setSelectedId(null);
-                    }}
-                    className={`relative rounded-full px-4 py-2 text-xs font-black uppercase tracking-wide transition ${
-                      viewerMode === m ? "text-white" : "text-ink-600 hover:text-ink-900"
-                    }`}
-                  >
-                    {viewerMode === m && (
-                      <motion.span
-                        layoutId="viewer-mode-pill"
-                        className="absolute inset-0 rounded-full bg-teal-600"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                      />
-                    )}
-                    <span className="relative z-10 inline-flex items-center gap-1.5">
-                      {m === "2d" ? <Square className="h-3.5 w-3.5" /> : <Box className="h-3.5 w-3.5" />}
-                      {m}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <span className="hidden text-[11px] font-semibold text-ink-500 sm:inline">
-                {viewerMode === "2d" ? "Precision editing" : "Drag to rotate · live front & back"}
-              </span>
-
-              {/* scene selector */}
-              <div className="flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white px-2 py-1 shadow-sm">
-                <span className="hidden pl-1 text-[10px] font-bold uppercase tracking-wider text-ink-500 lg:inline">
-                  Scene
-                </span>
-                {STAGE_BACKDROPS.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    title={`Backdrop: ${b.name}`}
-                    aria-label={`Backdrop ${b.name}`}
-                    onClick={() => setBackdropId(b.id)}
-                    className={`h-5 w-5 rounded-full border transition ${
-                      backdropId === b.id
-                        ? "scale-110 border-ink-900 ring-2 ring-teal-500 ring-offset-1"
-                        : "border-ink-900/20 hover:scale-105"
-                    }`}
-                    style={
-                      b.image
-                        ? { backgroundImage: `url(${b.image})`, backgroundSize: "cover" }
-                        : { background: b.css }
-                    }
-                  />
-                ))}
-              </div>
-
-              <div className="ml-auto flex items-center gap-1 rounded-full border border-ink-900/10 bg-white p-1 shadow-sm">
+        {/* ══ CENTER: 2D/3D → scene → product → side & tools underneath ══ */}
+        <div className="order-1 self-start xl:order-2 xl:sticky xl:top-28">
+          {/* top of product: viewer mode */}
+          <div className="flex justify-center">
+            <div className="relative flex rounded-full border border-ink-900/10 bg-white p-1 shadow-sm">
+              {(["2d", "3d"] as ViewerMode[]).map((m) => (
                 <button
+                  key={m}
                   type="button"
-                  onClick={undo}
-                  disabled={pastRef.current.length === 0}
-                  title="Undo (Ctrl/Cmd + Z)"
-                  className="grid h-8 w-8 place-items-center rounded-full text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-                  data-history={historyTick}
+                  onClick={() => {
+                    setViewerMode(m);
+                    setSelectedId(null);
+                  }}
+                  className={`relative rounded-full px-6 py-2 text-xs font-black uppercase tracking-wide transition ${
+                    viewerMode === m ? "text-white" : "text-ink-600 hover:text-ink-900"
+                  }`}
                 >
-                  <Undo2 className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={redo}
-                  disabled={futureRef.current.length === 0}
-                  title="Redo (Shift + Ctrl/Cmd + Z)"
-                  className="grid h-8 w-8 place-items-center rounded-full text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  <Redo2 className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadMockup}
-                  disabled={downloading}
-                  title="Download this view as an image"
-                  className="grid h-8 w-8 place-items-center rounded-full text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:opacity-40"
-                >
-                  {downloading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5" />
+                  {viewerMode === m && (
+                    <motion.span
+                      layoutId="viewer-mode-pill"
+                      className="absolute inset-0 rounded-full bg-teal-600"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                    />
                   )}
+                  <span className="relative z-10 inline-flex items-center gap-1.5">
+                    {m === "2d" ? <Square className="h-3.5 w-3.5" /> : <Box className="h-3.5 w-3.5" />}
+                    {m}
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  title="Fullscreen stage"
-                  className="grid h-8 w-8 place-items-center rounded-full text-ink-700 transition hover:bg-ink-900 hover:text-white"
-                >
-                  <Maximize className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              ))}
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex rounded-full border border-ink-900/10 bg-white p-1 shadow-sm">
+          {/* below viewer mode: scene */}
+          <div className="mt-2 flex justify-center">
+            <div className="flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white px-2.5 py-1.5 shadow-sm">
+              <span className="pl-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                Scene
+              </span>
+              {STAGE_BACKDROPS.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  title={`Backdrop: ${b.name}`}
+                  aria-label={`Backdrop ${b.name}`}
+                  onClick={() => setBackdropId(b.id)}
+                  className={`h-5 w-5 rounded-full border transition ${
+                    backdropId === b.id
+                      ? "scale-110 border-ink-900 ring-2 ring-teal-500 ring-offset-1"
+                      : "border-ink-900/20 hover:scale-105"
+                  }`}
+                  style={
+                    b.image
+                      ? { backgroundImage: `url(${b.image})`, backgroundSize: "cover" }
+                      : { background: b.css }
+                  }
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* the product itself */}
+          <div className="mt-2.5">
+            <MockupStage
+              product={product}
+              view={view}
+              onViewChange={(side) => {
+                setView(side);
+                setSelectedId(null);
+              }}
+              backdrop={backdropById(backdropId)}
+              placementId={activePlacement.id}
+              onPlacementSelect={selectPlacement}
+              mode={viewerMode}
+              colorHex={color.hex}
+              blend={blend}
+              editing={editing && viewerMode === "2d"}
+              designs={designs[productId]}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onUpdate={updateElement}
+            />
+          </div>
+
+          {/* below the product: front / back + every other stage control */}
+          <div className="mt-2.5 rounded-2xl border border-ink-900/10 bg-white p-2 shadow-sm">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              <div className="relative flex rounded-full bg-sand-100 p-1">
                 {(["front", "back"] as ViewSide[]).map((side) => (
                   <button
                     key={side}
@@ -845,7 +832,7 @@ export default function DesignStudio() {
                       setView(side);
                       setSelectedId(null);
                     }}
-                    className={`relative rounded-full px-5 py-2 text-xs font-bold capitalize transition ${
+                    className={`relative rounded-full px-5 py-1.5 text-xs font-bold capitalize transition ${
                       view === side ? "text-white" : "text-ink-600 hover:text-ink-900"
                     }`}
                   >
@@ -860,7 +847,7 @@ export default function DesignStudio() {
                       <FlipHorizontal2 className="h-3.5 w-3.5" />
                       {side}
                       {designs[productId][side].length > 0 && (
-                        <span className="ml-1 grid h-4 w-4 place-items-center rounded-full bg-coral-500 text-[9px] font-black text-white">
+                        <span className="grid h-4 w-4 place-items-center rounded-full bg-coral-500 text-[9px] font-black text-white">
                           {designs[productId][side].length}
                         </span>
                       )}
@@ -874,7 +861,7 @@ export default function DesignStudio() {
                 onClick={copyToOtherSide}
                 disabled={elements.length === 0}
                 title={`Copy all ${view} artwork to the ${view === "front" ? "back" : "front"}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white px-3.5 py-2 text-xs font-bold text-ink-700 shadow-sm transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
+                className="inline-flex items-center gap-1.5 rounded-full border border-ink-900/10 bg-white px-3 py-2 text-[11px] font-bold text-ink-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-35"
               >
                 <CopyPlus className="h-3.5 w-3.5" />
                 Copy to {view === "front" ? "back" : "front"}
@@ -884,7 +871,7 @@ export default function DesignStudio() {
                 <button
                   type="button"
                   onClick={() => setEditing((v) => !v)}
-                  className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold shadow-sm transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[11px] font-bold transition ${
                     editing
                       ? "border-ink-900/10 bg-white text-ink-700 hover:text-ink-900"
                       : "border-teal-500 bg-teal-500/10 text-teal-700"
@@ -894,93 +881,104 @@ export default function DesignStudio() {
                   {editing ? "Clean preview" : "Keep editing"}
                 </button>
               )}
+
+              <span className="mx-0.5 hidden h-6 w-px bg-ink-900/10 sm:block" />
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={undo}
+                  disabled={pastRef.current.length === 0}
+                  title="Undo (Ctrl/Cmd + Z)"
+                  data-history={historyTick}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10 text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={redo}
+                  disabled={futureRef.current.length === 0}
+                  title="Redo (Shift + Ctrl/Cmd + Z)"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10 text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <Redo2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadMockup}
+                  disabled={downloading}
+                  title="Download this view as an image"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10 text-ink-700 transition hover:bg-ink-900 hover:text-white disabled:opacity-40"
+                >
+                  {downloading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  title="Fullscreen stage"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-ink-900/10 text-ink-700 transition hover:bg-ink-900 hover:text-white"
+                >
+                  <Maximize className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
+
+            {/* quick print-location strip, right under the product */}
+            {viewerMode === "2d" && (
+              <div className="mt-2 border-t border-ink-900/10 pt-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                    <MapPin className="h-3 w-3 text-teal-500" />
+                    Location
+                  </span>
+                  {product.placements[view].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => selectPlacement(p.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+                        activePlacement.id === p.id
+                          ? "bg-ink-900 text-sand-50"
+                          : "bg-sand-100 text-ink-600 hover:bg-ink-900/10"
+                      }`}
+                    >
+                      {p.short}
+                      {p.surcharge > 0 && (
+                        <span className={activePlacement.id === p.id ? "text-teal-300" : "text-teal-600"}>
+                          +{money(p.surcharge)}
+                        </span>
+                      )}
+                      {elements.some((el) => el.placement === p.id) && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-coral-500" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* interactive print-location picker (sleeve / arm, chest, hood …) */}
-          {viewerMode === "2d" && (
-            <div className="mb-3 rounded-2xl border border-ink-900/10 bg-white p-2 shadow-sm">
-              <div className="mb-1.5 flex items-center gap-2 px-1">
-                <MapPin className="h-3.5 w-3.5 text-teal-500" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500">
-                  Print location
-                </p>
-                <span className="ml-auto text-[10px] font-semibold text-ink-500">
-                  {selected ? "Tap to move selected art" : "Tap to set where new art lands"}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {product.placements[view].map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => selectPlacement(p.id)}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
-                      activePlacement.id === p.id
-                        ? "bg-ink-900 text-sand-50 shadow-sm"
-                        : "bg-sand-100 text-ink-600 hover:bg-ink-900/10"
-                    }`}
-                  >
-                    {p.name}
-                    {p.surcharge > 0 && (
-                      <span
-                        className={
-                          activePlacement.id === p.id ? "text-teal-300" : "text-teal-600"
-                        }
-                      >
-                        +{money(p.surcharge)}
-                      </span>
-                    )}
-                    {elements.some((el) => el.placement === p.id) && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-coral-500" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <MockupStage
-            product={product}
-            view={view}
-            onViewChange={(side) => {
-              setView(side);
-              setSelectedId(null);
-            }}
-            backdrop={backdropById(backdropId)}
-            placementId={activePlacement.id}
-            onPlacementSelect={selectPlacement}
-            mode={viewerMode}
-            colorHex={color.hex}
-            blend={blend}
-            editing={editing && viewerMode === "2d"}
-            designs={designs[productId]}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onUpdate={updateElement}
-          />
-
-          <p className="mt-3 text-center text-[11px] font-medium text-ink-500">
+          <p className="mt-2.5 text-center text-[11px] font-medium leading-relaxed text-ink-500">
             {viewerMode === "2d"
-              ? "Drag to move · Handles to resize & rotate · Dashed box = print area · Tap a faded box for sleeve, hood or chest prints"
+              ? "Drag to move · Handles to resize & rotate · Dashed box = print area · Tap a faded box for sleeve, hood or chest"
               : "Drag the garment left or right · use Auto for a live showroom spin"}
           </p>
 
           <a
             href="#quote"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-coral-500 px-5 py-3 text-sm font-bold text-white shadow-card transition hover:bg-coral-600 xl:hidden"
+            className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-coral-500 px-5 py-3 text-sm font-bold text-white shadow-card transition hover:bg-coral-600 xl:hidden"
           >
             Continue to Quote
           </a>
         </div>
 
-        {/* Mobile/tablet: the same accordion toolkit, still a single page. */}
-        <div className="xl:hidden">
-          <ToolsPanel {...toolsProps} />
-        </div>
-
-        {/* quote column — self-contained so the studio region always fits */}
-        <div className="xl:sticky xl:top-28 xl:max-h-[calc(100vh-8.5rem)] xl:overflow-y-auto xl:thin-scroll xl:pr-1">
+        {/* ══ RIGHT: sizes → layers & adjust → request a quote ══ */}
+        <div className="order-3 xl:sticky xl:top-28 xl:max-h-[calc(100vh-8.5rem)] xl:overflow-y-auto xl:thin-scroll xl:pr-1">
           <QuotePanel
             product={product}
             colorName={color.name}
@@ -990,6 +988,7 @@ export default function DesignStudio() {
             designs={designs[productId]}
             artworks={artworks}
             blend={blend}
+            middleSlot={<LayersPanel {...layersProps} />}
             onNewDesign={newDesign}
           />
         </div>

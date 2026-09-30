@@ -34,6 +34,8 @@ interface QuotePanelProps {
   designs: ProductDesign;
   artworks: ArtworkFile[];
   blend: boolean;
+  /** Rendered between "Sizes & Quantities" and "Request a Quote". */
+  middleSlot?: React.ReactNode;
   onNewDesign: () => void;
 }
 
@@ -80,6 +82,7 @@ export default function QuotePanel({
   designs,
   artworks,
   blend,
+  middleSlot,
   onNewDesign,
 }: QuotePanelProps) {
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER);
@@ -181,14 +184,17 @@ export default function QuotePanel({
   };
 
   return (
-    <div className="space-y-4" id="quote">
-      {/* sizes */}
-      <section className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+    <div className="space-y-2.5" id="quote">
+      {/* 1 ── SIZES & QUANTITIES */}
+      <section className="rounded-2xl border border-ink-900/10 bg-white p-3 shadow-sm">
         <header className="mb-3 flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-500/10 text-teal-600">
+          <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-teal-500/10 text-teal-600">
             <BadgeDollarSign className="h-4 w-4" />
+            <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-ink-900 text-[9px] font-black text-sand-50">
+              1
+            </span>
           </span>
-          <h3 className="text-sm font-bold tracking-tight text-ink-900">Sizes & Quantities</h3>
+          <h3 className="text-[13px] font-bold tracking-tight text-ink-900">Sizes &amp; Quantities</h3>
         </header>
 
         <div className={`grid gap-2 ${product.sizes.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
@@ -283,13 +289,16 @@ export default function QuotePanel({
         )}
       </section>
 
+      {/* 2 ── LAYERS & ADJUST (injected by the studio) */}
+      {middleSlot}
+
       {/* artwork summary */}
-      <section className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+      <section className="rounded-2xl border border-ink-900/10 bg-white p-3 shadow-sm">
         <header className="mb-2 flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-500/10 text-teal-600">
             <FileCheck2 className="h-4 w-4" />
           </span>
-          <h3 className="text-sm font-bold tracking-tight text-ink-900">Artwork Files</h3>
+          <h3 className="text-[13px] font-bold tracking-tight text-ink-900">Artwork Files</h3>
         </header>
         {artworks.length === 0 ? (
           <p className="text-xs leading-relaxed text-ink-500">
@@ -310,9 +319,17 @@ export default function QuotePanel({
         )}
       </section>
 
-      {/* contact */}
-      <section className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-bold tracking-tight text-ink-900">Request a Quote</h3>
+      {/* 3 ── REQUEST A QUOTE */}
+      <section className="rounded-2xl border border-ink-900/10 bg-white p-3 shadow-sm">
+        <header className="mb-3 flex items-center gap-2.5">
+          <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-coral-500/10 text-coral-600">
+            <Send className="h-4 w-4" />
+            <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-ink-900 text-[9px] font-black text-sand-50">
+              3
+            </span>
+          </span>
+          <h3 className="text-[13px] font-bold tracking-tight text-ink-900">Request a Quote</h3>
+        </header>
         <div className="space-y-3">
           <Field label="Full Name" required error={errors.name}>
             <input
